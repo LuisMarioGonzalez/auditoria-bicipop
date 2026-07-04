@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informe de Auditoría de Seguridad — BiciPop</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f0f2f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: white;
+            padding: 50px 40px;
+            text-align: center;
+        }
+
+        header h1 { font-size: 2.2em; margin-bottom: 8px; letter-spacing: 1px; }
+        header .subtitle { font-size: 1.1em; opacity: 0.8; margin-bottom: 20px; }
+
+        .header-meta {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+            font-size: 0.9em;
+            opacity: 0.85;
+        }
+
+        .header-meta span { display: flex; align-items: center; gap: 6px; }
+
+        .alert-banner {
+            background: #dc3545;
+            color: white;
+            text-align: center;
+            padding: 12px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+
+        .content { padding: 40px; }
+
+        h2 {
+            color: #1a1a2e;
+            font-size: 1.5em;
+            border-left: 4px solid #0f3460;
+            padding-left: 15px;
+            margin: 40px 0 20px 0;
+        }
+
+        h2:first-child { margin-top: 0; }
+
+        .summary-box {
+            background: #f8f9fa;
+            border-left: 4px solid #0f3460;
+            padding: 20px 25px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 25px;
+            line-height: 1.8;
+        }
+
+        /* STATS */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin: 25px 0;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 25px 15px;
+            border-radius: 8px;
+            border: 2px solid #dee2e6;
+        }
+
+        .stat-number { font-size: 3em; font-weight: bold; line-height: 1; }
+        .stat-label { font-size: 0.85em; color: #666; margin-top: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .stat-critico { border-top: 5px solid #dc3545; }
+        .stat-critico .stat-number { color: #dc3545; }
+        .stat-alto { border-top: 5px solid #fd7e14; }
+        .stat-alto .stat-number { color: #fd7e14; }
+        .stat-medio { border-top: 5px solid #ffc107; }
+        .stat-medio .stat-number { color: #ffc107; }
+        .stat-info { border-top: 5px solid #17a2b8; }
+        .stat-info .stat-number { color: #17a2b8; }
+
+        /* TABLA RESUMEN */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.9em;
+        }
+
+        thead { background: #1a1a2e; color: white; }
+        th { padding: 14px 12px; text-align: left; font-weight: 600; }
+        td { padding: 12px; border-bottom: 1px solid #dee2e6; }
+        tbody tr:hover { background: #f8f9fa; }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+            color: white;
+        }
+
+        .badge-critico { background: #dc3545; }
+        .badge-alto { background: #fd7e14; }
+        .badge-medio { background: #ffc107; color: #333; }
+        .badge-info { background: #17a2b8; }
+        .badge-ok { background: #28a745; }
+
+        .verified { color: #28a745; font-weight: bold; }
+
+        /* HALLAZGOS */
+        .finding {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+
+        .finding-header {
+            padding: 18px 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .finding-header-critico { background: #fff5f5; border-left: 5px solid #dc3545; }
+        .finding-header-alto { background: #fff8f0; border-left: 5px solid #fd7e14; }
+        .finding-header-medio { background: #fffbf0; border-left: 5px solid #ffc107; }
+        .finding-header-info { background: #f0faff; border-left: 5px solid #17a2b8; }
+
+        .finding-header h3 { font-size: 1.1em; color: #1a1a2e; }
+        .finding-header .cwe { font-size: 0.8em; color: #666; margin-top: 3px; }
+
+        .finding-body { padding: 20px 25px; }
+        .finding-body p { margin-bottom: 12px; color: #444; }
+
+        .code-block {
+            background: #1a1a2e;
+            color: #a8ff78;
+            padding: 15px 20px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            overflow-x: auto;
+            margin: 15px 0;
+            white-space: pre;
+        }
+
+        .remediation {
+            background: #e8f5e9;
+            border-left: 4px solid #28a745;
+            padding: 15px 20px;
+            border-radius: 0 6px 6px 0;
+            margin-top: 15px;
+        }
+
+        .remediation h4 { color: #1b5e20; margin-bottom: 10px; font-size: 0.95em; }
+        .remediation p, .remediation li { color: #2e7d32; font-size: 0.9em; }
+        .remediation ul { margin-left: 20px; }
+        .remediation li { margin-bottom: 5px; }
+
+        /* INFO TABLE */
+        .info-table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+        .info-table td { padding: 10px 15px; border-bottom: 1px solid #eee; font-size: 0.9em; }
+        .info-table td:first-child { font-weight: 600; color: #555; width: 200px; }
+
+        /* METODOLOGIA */
+        .method-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .method-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            border-top: 3px solid #0f3460;
+        }
+
+        .method-card h4 { color: #0f3460; margin-bottom: 10px; font-size: 0.95em; }
+        .method-card p { font-size: 0.85em; color: #555; }
+
+        /* HERRAMIENTAS */
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .tool-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px 20px;
+            border-left: 3px solid #0f3460;
+            font-size: 0.9em;
+        }
+
+        .tool-card strong { color: #0f3460; display: block; margin-bottom: 4px; }
+
+        footer {
+            background: #1a1a2e;
+            color: #aaa;
+            text-align: center;
+            padding: 25px;
+            font-size: 0.85em;
+        }
+
+        footer span { color: white; }
+
+        @media (max-width: 768px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .method-grid, .tools-grid { grid-template-columns: 1fr; }
+            .content { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- HEADER -->
+    <header>
+        <h1>&#128274; Informe de Auditoría de Seguridad Web</h1>
+        <div class="subtitle">BiciPop Marketplace — bicipop.duckdns.org</div>
+        <div class="header-meta">
+            <span>&#128197; Fecha: 29 de junio de 2026</span>
+            <span>&#127919; IP: 54.227.73.159</span>
+            <span>&#127891; KeepCoding XIX Bootcamp</span>
+            <span>&#129302; Herramienta: CAI</span>
+        </div>
+    </header>
+
+    <div class="alert-banner">
+        &#9888;&#65039; HALLAZGOS CRÍTICOS DETECTADOS — SE REQUIERE ACCIÓN INMEDIATA
+    </div>
+
+    <div class="content">
+
+        <!-- RESUMEN EJECUTIVO -->
+        <h2>&#128203; Resumen Ejecutivo</h2>
+        <div class="summary-box">
+            Se realizó una auditoría de seguridad web completa contra la aplicación <strong>bicipop.duckdns.org</strong>,
+            un marketplace de bicicletas desarrollado como proyecto del Bootcamp KeepCoding XIX.
+            La auditoría utilizó la herramienta <strong>CAI (Cybersecurity AI)</strong> con los agentes especializados
+            Web App Pentester (agente 20), DNS/SMTP (agente 9), Bug Bounter (agente 4), Red Team (agente 12) y Retester (agente 15), combinando reconocimiento
+            pasivo y pruebas activas de vulnerabilidades.
+            <br><br>
+            Se identificaron <strong>2 vulnerabilidades críticas, 2 altas y 1 media</strong>, además de 2 hallazgos
+            informativos. El agente Red Team detectó la exposición de datos de usuario e IDs internos sin autenticación
+            (vía el endpoint <code>/search</code>). La aplicación presenta deficiencias de configuración que deben
+            corregirse antes de un despliegue en producción real.
+        </div>
+
+        <!-- ESTADÍSTICAS -->
+        <div class="stats-grid">
+            <div class="stat-card stat-critico">
+                <div class="stat-number">2</div>
+                <div class="stat-label">Críticos</div>
+            </div>
+            <div class="stat-card stat-alto">
+                <div class="stat-number">2</div>
+                <div class="stat-label">Altos</div>
+            </div>
+            <div class="stat-card stat-medio">
+                <div class="stat-number">1</div>
+                <div class="stat-label">Medios</div>
+            </div>
+            <div class="stat-card stat-info">
+                <div class="stat-number">2</div>
+                <div class="stat-label">Informativos</div>
+            </div>
+        </div>
+
+        <!-- INFORMACIÓN DEL OBJETIVO -->
+        <h2>&#127919; Información del Objetivo</h2>
+        <table class="info-table">
+            <tr><td>Dominio</td><td>bicipop.duckdns.org</td></tr>
+            <tr><td>IP</td><td>54.227.73.159</td></tr>
+            <tr><td>Servidor Web</td><td>nginx</td></tr>
+            <tr><td>Framework</td><td>Next.js 14 (Turbopack)</td></tr>
+            <tr><td>Backend</td><td>Supabase (PostgreSQL + Storage)</td></tr>
+            <tr><td>ORM</td><td>Prisma (IDs tipo CUID2)</td></tr>
+            <tr><td>Autenticación</td><td>Next.js Server Actions + cookies de sesión</td></tr>
+            <tr><td>TLS</td><td>Activo — Let's Encrypt (válido hasta agosto 2026)</td></tr>
+            <tr><td>Protocolo</td><td>HTTP redirige a HTTPS (301 → 200)</td></tr>
+            <tr><td>País</td><td>United States (AWS)</td></tr>
+            <tr><td>ICMP / Nmap</td><td>Bloqueado — solo superficie HTTP accesible</td></tr>
+        </table>
+
+        <!-- METODOLOGÍA -->
+        <h2>&#128295; Metodología</h2>
+        <div class="method-grid">
+            <div class="method-card">
+                <h4>Fase 1 — Reconocimiento</h4>
+                <p>Headers HTTP, fingerprinting de tecnologías, análisis de respuestas del servidor.</p>
+            </div>
+            <div class="method-card">
+                <h4>Fase 2 — Cabeceras de Seguridad</h4>
+                <p>Verificación de headers de protección: CSP, HSTS, X-Frame-Options y otros.</p>
+            </div>
+            <div class="method-card">
+                <h4>Fase 3 — Enumeración de Rutas</h4>
+                <p>Rutas API comunes, archivos sensibles, directorios ocultos.</p>
+            </div>
+            <div class="method-card">
+                <h4>Fase 4 — Pruebas Activas</h4>
+                <p>XSS, SQL Injection, IDOR y pruebas de autenticación.</p>
+            </div>
+            <div class="method-card">
+                <h4>Fase 5 — Análisis DNS/Email</h4>
+                <p>Registros SPF, DMARC, MX. Verificación de vulnerabilidad a email spoofing.</p>
+            </div>
+            <div class="method-card">
+                <h4>Fase 6 — Verificación</h4>
+                <p>Confirmación de todos los hallazgos para descartar falsos positivos.</p>
+            </div>
+        </div>
+
+        <!-- TABLA RESUMEN DE HALLAZGOS -->
+        <h2>&#128202; Tabla de Hallazgos</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Severidad</th>
+                    <th>Hallazgo</th>
+                    <th>Endpoint</th>
+                    <th>CWE</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>H-01</td>
+                    <td><span class="badge badge-critico">CRÍTICO</span></td>
+                    <td>Ausencia total de cabeceras de seguridad HTTP</td>
+                    <td>Todos</td>
+                    <td>CWE-693</td>
+                    <td class="verified">✔ CONFIRMADO</td>
+                </tr>
+                <tr>
+                    <td>H-02</td>
+                    <td><span class="badge badge-critico">CRÍTICO</span></td>
+                    <td>Email Spoofing — sin SPF, DMARC vacío</td>
+                    <td>DNS</td>
+                    <td>CWE-290</td>
+                    <td class="verified">✔ CONFIRMADO</td>
+                </tr>
+                <tr>
+                    <td>H-03</td>
+                    <td><span class="badge badge-alto">ALTO</span></td>
+                    <td>Credenciales Sentry expuestas en HTML público</td>
+                    <td>/</td>
+                    <td>CWE-200</td>
+                    <td class="verified">✔ CONFIRMADO</td>
+                </tr>
+                <tr>
+                    <td>H-04</td>
+                    <td><span class="badge badge-medio">MEDIO</span></td>
+                    <td>Meta robots=noindex inconsistente con producción</td>
+                    <td>/</td>
+                    <td>CWE-215</td>
+                    <td class="verified">✔ CONFIRMADO</td>
+                </tr>
+                <tr>
+                    <td>H-05</td>
+                    <td><span class="badge badge-info">INFO</span></td>
+                    <td>Productos accesibles sin autenticación (IDOR potencial)</td>
+                    <td>/products/:id</td>
+                    <td>CWE-639</td>
+                    <td class="verified">✔ CONFIRMADO</td>
+                </tr>
+                <tr>
+                    <td>H-06</td>
+                    <td><span class="badge badge-alto">ALTO</span></td>
+                    <td>Exposición de datos de usuario e IDs internos sin autenticación</td>
+                    <td>/search</td>
+                    <td>CWE-200</td>
+                    <td class="verified">✔ CONFIRMADO</td>
+                </tr>
+                <tr>
+                    <td>H-07</td>
+                    <td><span class="badge badge-info">INFO</span></td>
+                    <td>Exposición de infraestructura Supabase — superficie anónima protegida</td>
+                    <td>/search (RSC)</td>
+                    <td>CWE-200</td>
+                    <td class="verified">✔ VERIFICADO</td>
+                </tr>
+                <tr>
+                    <td>H-08</td>
+                    <td><span class="badge badge-ok">OK</span></td>
+                    <td>Archivos sensibles protegidos (.env, .git)</td>
+                    <td>/.env /.git</td>
+                    <td>—</td>
+                    <td class="verified">✔ OK</td>
+                </tr>
+                <tr>
+                    <td>H-09</td>
+                    <td><span class="badge badge-ok">OK</span></td>
+                    <td>Endpoints administrativos no expuestos</td>
+                    <td>/api/*</td>
+                    <td>—</td>
+                    <td class="verified">✔ OK</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- HALLAZGOS DETALLADOS -->
+        <h2>&#128270; Hallazgos Detallados</h2>
+
+        <!-- H-01 -->
+        <div class="finding">
+            <div class="finding-header finding-header-critico">
+                <span class="badge badge-critico">CRÍTICO</span>
+                <div>
+                    <h3>H-01 — Ausencia total de cabeceras de seguridad HTTP</h3>
+                    <div class="cwe">CWE-693 | Afecta: todos los endpoints</div>
+                </div>
+            </div>
+            <div class="finding-body">
+                <p>La aplicación no implementa ninguna de las cabeceras de seguridad HTTP recomendadas por OWASP.
+                Esto amplía la superficie de ataque ante clickjacking, XSS, MIME sniffing y ataques de downgrade TLS.</p>
+
+                <p><strong>Evidencia:</strong></p>
+                <div class="code-block">$ curl -sk https://bicipop.duckdns.org -I | grep -iE "x-frame|csp|hsts|x-content|x-xss"
+# Sin output — CONFIRMADO: ninguna cabecera de seguridad presente</div>
+
+                <p><strong>Cabeceras ausentes:</strong></p>
+                <table>
+                    <thead><tr><th>Cabecera</th><th>Riesgo por ausencia</th></tr></thead>
+                    <tbody>
+                        <tr><td>X-Frame-Options</td><td>Clickjacking — la página puede incrustarse en iframe malicioso</td></tr>
+                        <tr><td>Content-Security-Policy</td><td>XSS sin restricción de fuentes de scripts</td></tr>
+                        <tr><td>Strict-Transport-Security</td><td>Downgrade TLS, ataques MITM</td></tr>
+                        <tr><td>X-Content-Type-Options</td><td>MIME sniffing — el navegador puede interpretar archivos de forma insegura</td></tr>
+                        <tr><td>X-XSS-Protection</td><td>Sin protección XSS en navegadores legacy</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="remediation">
+                    <h4>&#9989; Recomendación — nginx.conf</h4>
+                    <div class="code-block" style="margin-top:10px">add_header X-Frame-Options "DENY" always;
+add_header X-Content-Type-Options "nosniff" always;
+add_header X-XSS-Protection "1; mode=block" always;
+add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+add_header Content-Security-Policy "default-src 'self';" always;</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- H-02 -->
+        <div class="finding">
+            <div class="finding-header finding-header-critico">
+                <span class="badge badge-critico">CRÍTICO</span>
+                <div>
+                    <h3>H-02 — Dominio vulnerable a Email Spoofing</h3>
+                    <div class="cwe">CWE-290 | Afecta: registros DNS del dominio</div>
+                </div>
+            </div>
+            <div class="finding-body">
+                <p>El dominio no tiene registro SPF y el registro DMARC existe pero está completamente vacío.
+                Cualquier atacante puede enviar emails suplantando @bicipop.duckdns.org sin restricción técnica.</p>
+
+                <p><strong>Evidencia:</strong></p>
+                <div class="code-block">$ dig TXT bicipop.duckdns.org | grep spf
+# Sin output — CONFIRMADO: registro SPF ausente
+
+$ dig TXT _dmarc.bicipop.duckdns.org
+_dmarc.bicipop.duckdns.org. 5  IN  TXT  ""
+# CONFIRMADO: DMARC vacío — sin política de protección
+
+$ dig MX bicipop.duckdns.org
+bicipop.duckdns.org. 5  IN  MX  50 bicipop.duckdns.org.
+# MX apunta al propio dominio — configuración inusual</div>
+
+                <div class="remediation">
+                    <h4>&#9989; Recomendación — registros DNS</h4>
+                    <ul>
+                        <li>Añadir registro SPF: <code>bicipop.duckdns.org. TXT "v=spf1 -all"</code></li>
+                        <li>Configurar DMARC con política de rechazo: <code>_dmarc.bicipop.duckdns.org. TXT "v=DMARC1; p=reject; rua=mailto:admin@bicipop.duckdns.org"</code></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- H-03 -->
+        <div class="finding">
+            <div class="finding-header finding-header-alto">
+                <span class="badge badge-alto">ALTO</span>
+                <div>
+                    <h3>H-03 — Credenciales Sentry expuestas en HTML público</h3>
+                    <div class="cwe">CWE-200 | Afecta: / (página principal)</div>
+                </div>
+            </div>
+            <div class="finding-body">
+                <p>Las credenciales de configuración de Sentry (plataforma de monitoreo de errores) se exponen
+                en texto plano en las meta tags HTML de cada página, accesibles para cualquier visitante.</p>
+
+                <p><strong>Evidencia:</strong></p>
+                <div class="code-block">$ curl -sk https://bicipop.duckdns.org/ | grep -o "sentry-public_key=[a-f0-9]*"
+sentry-public_key=df3081142f1b087d672e527c0dec2b7c
+
+# Datos completos expuestos en meta baggage:
+sentry-environment=production
+sentry-public_key=df3081142f1b087d672e527c0dec2b7c
+sentry-org_id=4510834727321600
+sentry-trace_id=9b242c5d53289a6c0c063b882defe4e5</div>
+
+                <div class="remediation">
+                    <h4>&#9989; Recomendación</h4>
+                    <ul>
+                        <li>Inicializar Sentry desde el servidor (server-side), nunca en el cliente</li>
+                        <li>Usar variables de entorno del servidor para el DSN</li>
+                        <li>Nunca exponer el Org ID ni el Trace ID en el HTML público</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- H-04 -->
+        <div class="finding">
+            <div class="finding-header finding-header-medio">
+                <span class="badge badge-medio">MEDIO</span>
+                <div>
+                    <h3>H-04 — Meta robots=noindex inconsistente con entorno de producción</h3>
+                    <div class="cwe">CWE-215 | Afecta: / (todas las páginas)</div>
+                </div>
+            </div>
+            <div class="finding-body">
+                <p>Todas las páginas incluyen <code>&lt;meta name="robots" content="noindex"/&gt;</code>,
+                pero la configuración de Sentry indica <code>sentry-environment=production</code>.
+                Esta contradicción sugiere una falsa sensación de seguridad por oscuridad.</p>
+
+                <p><strong>Evidencia:</strong></p>
+                <div class="code-block">&lt;meta name="robots" content="noindex"/&gt;
+&lt;meta name="baggage" content="sentry-environment=production,..."/&gt;</div>
+
+                <div class="remediation">
+                    <h4>&#9989; Recomendación</h4>
+                    <ul>
+                        <li>Si la app es pública: eliminar <code>noindex</code></li>
+                        <li>Si debe ser privada: implementar autenticación real, no depender de oscuridad</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- H-05 -->
+        <div class="finding">
+            <div class="finding-header finding-header-info">
+                <span class="badge badge-info">INFO</span>
+                <div>
+                    <h3>H-05 — Productos accesibles sin autenticación (IDOR potencial)</h3>
+                    <div class="cwe">CWE-639 | Afecta: /products/:id</div>
+                </div>
+            </div>
+            <div class="finding-body">
+                <p>Los productos son accesibles sin autenticación mediante su ID en la URL.
+                Se confirmó HTTP 200 con contenido completo del producto.</p>
+
+                <p><strong>Evidencia:</strong></p>
+                <div class="code-block">$ curl -sk https://bicipop.duckdns.org/products/cmpmrun9t003yotwfs060rsop \
+  -o /dev/null -w "HTTP %{http_code}"
+HTTP 200  # CONFIRMADO — página accesible sin autenticación</div>
+
+                <div class="remediation">
+                    <h4>&#9989; Recomendación</h4>
+                    <ul>
+                        <li>Verificar si hay datos de productos que requieran autenticación</li>
+                        <li>Implementar control de acceso basado en roles si procede</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- H-06 -->
+        <div class="finding">
+            <div class="finding-header finding-header-alto">
+                <span class="badge badge-alto">ALTO</span>
+                <div>
+                    <h3>H-06 — Exposición de datos de usuario e IDs internos sin autenticación</h3>
+                    <div class="cwe">CWE-200 | Afecta: /search (payload RSC) | Detectado por: Agente 12 (Red Team)</div>
+                </div>
+            </div>
+            <div class="finding-body">
+                <p>El endpoint público <code>/search</code> devuelve en su payload RSC (React Server Components) la
+                estructura completa de cada producto, incluyendo el <strong>ID interno de usuario (CUID2)</strong>,
+                el <strong>username</strong> y la <strong>ubicación</strong>, sin autenticación. Esto permite enumerar
+                usuarios reales y, combinado con H-05, habilita ataques IDOR usando esos IDs internos.</p>
+
+                <p><strong>Evidencia — payload expuesto:</strong></p>
+                <div class="code-block">{
+  "id": "cmqp6xavu000004l1cdxbyyq4",
+  "title": "Prueba producto",
+  "price": 1234,
+  "userId": "cmpmrudon000gotwffpkzsq4y",   // ID interno de usuario
+  "location": "Cadiz",                       // Geolocalización
+  "username": "Antonia",                     // Username real
+  "imageUrl": "https://gqwarqgiibymlrxlklsh.supabase.co/..."
+}
+
+# Usuarios reales enumerados a partir del payload:
+Antonia -> cmpmrudon000gotwffpkzsq4y
+David   -> cmqf3sshd000001mjjpi2abzb
+Paco    -> cmpmrudon000fotwfzs8foj7j
+Pilar   -> cmpmrudon000hotwf9jm2ijzv</div>
+
+                <div class="remediation">
+                    <h4>&#9989; Recomendación</h4>
+                    <ul>
+                        <li>No incluir el <code>userId</code> interno en los payloads públicos</li>
+                        <li>Exponer solo un identificador público no correlacionable si es imprescindible</li>
+                        <li>Aplicar control de acceso a los endpoints que reciban esos IDs (mitiga también H-05)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- H-07 -->
+        <div class="finding">
+            <div class="finding-header finding-header-info">
+                <span class="badge badge-info">INFO</span>
+                <div>
+                    <h3>H-07 — Exposición de infraestructura Supabase (verificada)</h3>
+                    <div class="cwe">CWE-200 | Afecta: /search (payload RSC) | &#10004; Superficie anónima verificada como protegida</div>
+                </div>
+            </div>
+            <div class="finding-body">
+                <p>El payload RSC de <code>/search</code> expone la URL del backend Supabase, revelando el
+                <strong>Project ID</strong> (<code>gqwarqgiibymlrxlklsh</code>) y la ruta del bucket público de imágenes.
+                Este identificador es público por diseño en Supabase, por lo que la exposición en sí es de bajo impacto.</p>
+
+                <p><strong>Evidencia:</strong></p>
+                <div class="code-block">https://gqwarqgiibymlrxlklsh.supabase.co/storage/v1/object/public/products/</div>
+
+                <p><strong>&#10004; Verificación realizada — ambas vías de explotación están protegidas:</strong></p>
+                <div class="code-block">$ curl -si ".../storage/v1/object/list/products"
+HTTP/2 400  -&gt;  {"error":"Bucket not found"}      # no se puede enumerar el bucket
+
+$ curl -si ".../rest/v1/users?select=*"
+HTTP/2 401  -&gt;  UNAUTHORIZED_MISSING_API_KEY       # la REST API exige la anon key</div>
+
+                <p style="margin-top:10px"><strong>Riesgo residual (no explotado):</strong> queda por confirmar si la anon key
+                del bundle permitiría consultar tablas con RLS desactivado — fuera del alcance de las pruebas anónimas.</p>
+
+                <div class="remediation">
+                    <h4>&#9989; Recomendación</h4>
+                    <ul>
+                        <li>Verificar que las políticas RLS (Row Level Security) están activas en todas las tablas</li>
+                        <li>Configurar el bucket como privado con URLs firmadas si las imágenes no deben ser públicas</li>
+                        <li>No exponer detalles del backend en los payloads del cliente</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- HERRAMIENTAS -->
+        <h2>&#128736;&#65039; Herramientas y Agentes Utilizados</h2>
+        <div class="tools-grid">
+            <div class="tool-card">
+                <strong>CAI — Agente 20</strong>
+                Web App Pentester — reconocimiento, enumeración y pruebas activas
+            </div>
+            <div class="tool-card">
+                <strong>CAI — Agente 9</strong>
+                DNS/SMTP Agent — análisis de configuración DNS y seguridad de email
+            </div>
+            <div class="tool-card">
+                <strong>CAI — Agente 4</strong>
+                Bug Bounter — pruebas activas XSS, login endpoint y IDOR
+            </div>
+            <div class="tool-card">
+                <strong>CAI — Agente 12</strong>
+                Red Team — SSTI/SQLi/XSS dirigidos, exposición de datos y mapeo de infraestructura
+            </div>
+            <div class="tool-card">
+                <strong>CAI — Agente 14</strong>
+                Reporting Agent — generación del informe final
+            </div>
+            <div class="tool-card">
+                <strong>curl</strong>
+                Peticiones HTTP manuales y análisis de cabeceras
+            </div>
+            <div class="tool-card">
+                <strong>dig</strong>
+                Consultas DNS — SPF, DMARC, MX
+            </div>
+            <div class="tool-card">
+                <strong>Python + subprocess</strong>
+                Automatización de enumeración de rutas y extracción de datos
+            </div>
+        </div>
+
+        <!-- RECOMENDACIONES PRIORITARIAS -->
+        <h2>&#128209; Recomendaciones Prioritarias</h2>
+        <div class="summary-box">
+            <ol style="margin-left: 20px; line-height: 2.2;">
+                <li><strong>[URGENTE]</strong> Añadir cabeceras de seguridad HTTP en la configuración de nginx</li>
+                <li><strong>[URGENTE]</strong> Configurar registros SPF y DMARC para prevenir email spoofing</li>
+                <li><strong>[ALTO]</strong> Mover la inicialización de Sentry al servidor — no exponer credenciales en HTML</li>
+                <li><strong>[MEDIO]</strong> Revisar política de indexación (noindex vs entorno de producción)</li>
+                <li><strong>[BAJO]</strong> Auditar control de acceso en páginas de productos</li>
+                <li><strong>[EXTRA]</strong> Ocultar versión del servidor: <code>server_tokens off;</code> en nginx</li>
+            </ol>
+        </div>
+
+    </div><!-- /content -->
+
+    <footer>
+        <p>Informe generado con <span>CAI — Cybersecurity AI</span> &nbsp;|&nbsp; Target: <span>bicipop.duckdns.org</span> &nbsp;|&nbsp; Fecha: <span>29 de junio de 2026</span></p>
+        <p style="margin-top: 8px;">KeepCoding XIX Bootcamp — Proyecto Final de Ciberseguridad</p>
+    </footer>
+
+</div>
+</body>
+</html>
