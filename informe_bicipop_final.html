@@ -383,22 +383,6 @@
                 </tr>
                 <tr>
                     <td>H-04</td>
-                    <td><span class="badge badge-medio">MEDIO</span></td>
-                    <td>Meta robots=noindex inconsistente con producción</td>
-                    <td>/</td>
-                    <td>CWE-215</td>
-                    <td class="verified">✔ CONFIRMADO</td>
-                </tr>
-                <tr>
-                    <td>H-05</td>
-                    <td><span class="badge badge-info">INFO</span></td>
-                    <td>Productos accesibles sin autenticación (IDOR potencial)</td>
-                    <td>/products/:id</td>
-                    <td>CWE-639</td>
-                    <td class="verified">✔ CONFIRMADO</td>
-                </tr>
-                <tr>
-                    <td>H-06</td>
                     <td><span class="badge badge-alto">ALTO</span></td>
                     <td>Exposición de datos de usuario e IDs internos sin autenticación</td>
                     <td>/search</td>
@@ -406,12 +390,28 @@
                     <td class="verified">✔ CONFIRMADO</td>
                 </tr>
                 <tr>
-                    <td>H-07</td>
+                    <td>H-05</td>
+                    <td><span class="badge badge-medio">MEDIO</span></td>
+                    <td>Meta robots=noindex inconsistente con producción</td>
+                    <td>/</td>
+                    <td>CWE-215</td>
+                    <td class="verified">✔ CONFIRMADO</td>
+                </tr>
+                <tr>
+                    <td>H-06</td>
                     <td><span class="badge badge-info">INFO</span></td>
                     <td>Exposición de infraestructura Supabase — superficie anónima protegida</td>
                     <td>/search (RSC)</td>
                     <td>CWE-200</td>
                     <td class="verified">✔ VERIFICADO</td>
+                </tr>
+                <tr>
+                    <td>H-07</td>
+                    <td><span class="badge badge-info">INFO</span></td>
+                    <td>Productos accesibles sin autenticación (IDOR potencial)</td>
+                    <td>/products/:id</td>
+                    <td>CWE-639</td>
+                    <td class="verified">✔ CONFIRMADO</td>
                 </tr>
                 <tr>
                     <td>H-08</td>
@@ -546,66 +546,10 @@ sentry-trace_id=9b242c5d53289a6c0c063b882defe4e5</div>
 
         <!-- H-04 -->
         <div class="finding">
-            <div class="finding-header finding-header-medio">
-                <span class="badge badge-medio">MEDIO</span>
-                <div>
-                    <h3>H-04 — Meta robots=noindex inconsistente con entorno de producción</h3>
-                    <div class="cwe">CWE-215 | Afecta: / (todas las páginas)</div>
-                </div>
-            </div>
-            <div class="finding-body">
-                <p>Todas las páginas incluyen <code>&lt;meta name="robots" content="noindex"/&gt;</code>,
-                pero la configuración de Sentry indica <code>sentry-environment=production</code>.
-                Esta contradicción sugiere una falsa sensación de seguridad por oscuridad.</p>
-
-                <p><strong>Evidencia:</strong></p>
-                <div class="code-block">&lt;meta name="robots" content="noindex"/&gt;
-&lt;meta name="baggage" content="sentry-environment=production,..."/&gt;</div>
-
-                <div class="remediation">
-                    <h4>&#9989; Recomendación</h4>
-                    <ul>
-                        <li>Si la app es pública: eliminar <code>noindex</code></li>
-                        <li>Si debe ser privada: implementar autenticación real, no depender de oscuridad</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        <!-- H-05 -->
-        <div class="finding">
-            <div class="finding-header finding-header-info">
-                <span class="badge badge-info">INFO</span>
-                <div>
-                    <h3>H-05 — Productos accesibles sin autenticación (IDOR potencial)</h3>
-                    <div class="cwe">CWE-639 | Afecta: /products/:id</div>
-                </div>
-            </div>
-            <div class="finding-body">
-                <p>Los productos son accesibles sin autenticación mediante su ID en la URL.
-                Se confirmó HTTP 200 con contenido completo del producto.</p>
-
-                <p><strong>Evidencia:</strong></p>
-                <div class="code-block">$ curl -sk https://bicipop.duckdns.org/products/cmpmrun9t003yotwfs060rsop \
-  -o /dev/null -w "HTTP %{http_code}"
-HTTP 200  # CONFIRMADO — página accesible sin autenticación</div>
-
-                <div class="remediation">
-                    <h4>&#9989; Recomendación</h4>
-                    <ul>
-                        <li>Verificar si hay datos de productos que requieran autenticación</li>
-                        <li>Implementar control de acceso basado en roles si procede</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        <!-- H-06 -->
-        <div class="finding">
             <div class="finding-header finding-header-alto">
                 <span class="badge badge-alto">ALTO</span>
                 <div>
-                    <h3>H-06 — Exposición de datos de usuario e IDs internos sin autenticación</h3>
+                    <h3>H-04 — Exposición de datos de usuario e IDs internos sin autenticación</h3>
                     <div class="cwe">CWE-200 | Afecta: /search (payload RSC) | Detectado por: Agente 12 (Red Team)</div>
                 </div>
             </div>
@@ -613,7 +557,7 @@ HTTP 200  # CONFIRMADO — página accesible sin autenticación</div>
                 <p>El endpoint público <code>/search</code> devuelve en su payload RSC (React Server Components) la
                 estructura completa de cada producto, incluyendo el <strong>ID interno de usuario (CUID2)</strong>,
                 el <strong>username</strong> y la <strong>ubicación</strong>, sin autenticación. Esto permite enumerar
-                usuarios reales y, combinado con H-05, habilita ataques IDOR usando esos IDs internos.</p>
+                usuarios reales y, combinado con H-07, habilita ataques IDOR usando esos IDs internos.</p>
 
                 <p><strong>Evidencia — payload expuesto:</strong></p>
                 <div class="code-block">{
@@ -637,18 +581,46 @@ Pilar   -> cmpmrudon000hotwf9jm2ijzv</div>
                     <ul>
                         <li>No incluir el <code>userId</code> interno en los payloads públicos</li>
                         <li>Exponer solo un identificador público no correlacionable si es imprescindible</li>
-                        <li>Aplicar control de acceso a los endpoints que reciban esos IDs (mitiga también H-05)</li>
+                        <li>Aplicar control de acceso a los endpoints que reciban esos IDs (mitiga también H-07)</li>
                     </ul>
                 </div>
             </div>
         </div>
 
-        <!-- H-07 -->
+        <!-- H-05 -->
+        <div class="finding">
+            <div class="finding-header finding-header-medio">
+                <span class="badge badge-medio">MEDIO</span>
+                <div>
+                    <h3>H-05 — Meta robots=noindex inconsistente con entorno de producción</h3>
+                    <div class="cwe">CWE-215 | Afecta: / (todas las páginas)</div>
+                </div>
+            </div>
+            <div class="finding-body">
+                <p>Todas las páginas incluyen <code>&lt;meta name="robots" content="noindex"/&gt;</code>,
+                pero la configuración de Sentry indica <code>sentry-environment=production</code>.
+                Esta contradicción sugiere una falsa sensación de seguridad por oscuridad.</p>
+
+                <p><strong>Evidencia:</strong></p>
+                <div class="code-block">&lt;meta name="robots" content="noindex"/&gt;
+&lt;meta name="baggage" content="sentry-environment=production,..."/&gt;</div>
+
+                <div class="remediation">
+                    <h4>&#9989; Recomendación</h4>
+                    <ul>
+                        <li>Si la app es pública: eliminar <code>noindex</code></li>
+                        <li>Si debe ser privada: implementar autenticación real, no depender de oscuridad</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- H-06 -->
         <div class="finding">
             <div class="finding-header finding-header-info">
                 <span class="badge badge-info">INFO</span>
                 <div>
-                    <h3>H-07 — Exposición de infraestructura Supabase (verificada)</h3>
+                    <h3>H-06 — Exposición de infraestructura Supabase (verificada)</h3>
                     <div class="cwe">CWE-200 | Afecta: /search (payload RSC) | &#10004; Superficie anónima verificada como protegida</div>
                 </div>
             </div>
@@ -676,6 +648,34 @@ HTTP/2 401  -&gt;  UNAUTHORIZED_MISSING_API_KEY       # la REST API exige la ano
                         <li>Verificar que las políticas RLS (Row Level Security) están activas en todas las tablas</li>
                         <li>Configurar el bucket como privado con URLs firmadas si las imágenes no deben ser públicas</li>
                         <li>No exponer detalles del backend en los payloads del cliente</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- H-07 -->
+        <div class="finding">
+            <div class="finding-header finding-header-info">
+                <span class="badge badge-info">INFO</span>
+                <div>
+                    <h3>H-07 — Productos accesibles sin autenticación (IDOR potencial)</h3>
+                    <div class="cwe">CWE-639 | Afecta: /products/:id</div>
+                </div>
+            </div>
+            <div class="finding-body">
+                <p>Los productos son accesibles sin autenticación mediante su ID en la URL.
+                Se confirmó HTTP 200 con contenido completo del producto.</p>
+
+                <p><strong>Evidencia:</strong></p>
+                <div class="code-block">$ curl -sk https://bicipop.duckdns.org/products/cmpmrun9t003yotwfs060rsop \
+  -o /dev/null -w "HTTP %{http_code}"
+HTTP 200  # CONFIRMADO — página accesible sin autenticación</div>
+
+                <div class="remediation">
+                    <h4>&#9989; Recomendación</h4>
+                    <ul>
+                        <li>Verificar si hay datos de productos que requieran autenticación</li>
+                        <li>Implementar control de acceso basado en roles si procede</li>
                     </ul>
                 </div>
             </div>

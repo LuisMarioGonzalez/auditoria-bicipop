@@ -109,7 +109,7 @@
 
 ## Slide 10 — Visión global de resultados  ⏱️ 7:10–7:35
 
-> “El resultado final fue de \*\*siete hallazgos de seguridad\*\*: dos críticos, dos altos, dos medios y uno informativo. Además, verificamos dos controles que funcionaban correctamente, por lo que documentamos nueve comprobaciones en total.”
+> “El resultado final fue de \*\*siete hallazgos de seguridad\*\*: dos críticos, dos altos, un medio y dos informativos. Además, verificamos dos controles que funcionaban correctamente, por lo que documentamos nueve comprobaciones en total.”
 >
 > “A continuación vamos a explicar los cuatro hallazgos más relevantes.”
 
@@ -139,7 +139,19 @@
 
 \---
 
-## Slide 13 — H-03: exposición de datos de usuario e IDs internos  ⏱️ 9:25–10:35
+## Slide 13 — H-03: configuración de Sentry expuesta  ⏱️ 9:25–10:35
+
+> “También encontramos información de configuración de \*\*Sentry\*\* dentro de las etiquetas HTML públicas, incluyendo la clave pública y el identificador de organización.”
+>
+> “Aquí conviene hacer una precisión: una clave pública o DSN de Sentry no es equivalente a una contraseña secreta y, en determinadas integraciones de frontend, parte de esta información puede estar expuesta por diseño.”
+>
+> “El riesgo aparece por la cantidad de metadatos revelados y por la posibilidad de abusar del endpoint de ingestión para generar eventos falsos, contaminar la monitorización o facilitar reconocimiento dirigido.”
+>
+> “Por eso recomendamos reducir al mínimo la información enviada al cliente, mantener en servidor los valores que no sean estrictamente necesarios, aplicar filtros y límites de ingestión y revisar que Sentry no incluya datos sensibles en errores o trazas.”
+
+\---
+
+## Slide 14 — H-04: exposición de datos de usuario e IDs internos  ⏱️ 10:35–11:25
 
 > “Este fue el hallazgo más interesante de la auditoría y fue detectado durante las pruebas del agente Red Team.”
 >
@@ -153,25 +165,13 @@
 
 \---
 
-## Slide 14 — H-04: configuración de Sentry expuesta  ⏱️ 10:35–11:25
-
-> “También encontramos información de configuración de \*\*Sentry\*\* dentro de las etiquetas HTML públicas, incluyendo la clave pública y el identificador de organización.”
->
-> “Aquí conviene hacer una precisión: una clave pública o DSN de Sentry no es equivalente a una contraseña secreta y, en determinadas integraciones de frontend, parte de esta información puede estar expuesta por diseño.”
->
-> “El riesgo aparece por la cantidad de metadatos revelados y por la posibilidad de abusar del endpoint de ingestión para generar eventos falsos, contaminar la monitorización o facilitar reconocimiento dirigido.”
->
-> “Por eso recomendamos reducir al mínimo la información enviada al cliente, mantener en servidor los valores que no sean estrictamente necesarios, aplicar filtros y límites de ingestión y revisar que Sentry no incluya datos sensibles en errores o trazas.”
-
-\---
-
 ## Slide 15 — Otros hallazgos, controles y falsos positivos  ⏱️ 11:25–12:25
 
 > “Los tres hallazgos restantes fueron de menor severidad.”
 >
 > “La etiqueta `robots=noindex` era incoherente con un entorno identificado como producción. No es una medida de seguridad: únicamente dificulta la indexación en buscadores.”
 >
-> “También se exponía el Project ID y la ruta pública de almacenamiento de Supabase. La URL pública puede ser necesaria para servir imágenes, por lo que el riesgo depende de la configuración real del bucket y de las políticas RLS. No confirmamos un acceso no autorizado a las tablas, por lo que la recomendación es \*\*verificar y, si fuera necesario, activar RLS\*\*, además de revisar permisos del bucket.”
+> “También se exponía el Project ID y la ruta pública de almacenamiento de Supabase. \*\*Verificamos activamente las vías de explotación\*\*: el listado del bucket devuelve error y la API REST exige clave de autenticación, de modo que la superficie anónima \*\*está protegida\*\*. Por eso lo clasificamos como \*\*informativo\*\*, no como riesgo medio. El único riesgo residual, que no llegamos a explotar, sería que la clave anónima del bundle permitiera consultar tablas con RLS desactivado; la recomendación es confirmar que RLS está activo en todas las tablas.”
 >
 > “Los productos eran accesibles sin login, pero esto puede ser intencional en un marketplace. Por eso se clasificó como informativo y no como un IDOR confirmado.”
 >
@@ -327,12 +327,20 @@ Para reducir aproximadamente un minuto y medio sin perder contenido esencial:
 
 \---
 
-# Inconsistencia que conviene corregir antes de presentar
+# Numeración de hallazgos (referencia unificada)
 
-La numeración de los hallazgos no coincide entre el PowerPoint y el informe escrito:
+Numeración canónica, coincidente entre el informe (DOCX), el PowerPoint y este guion:
 
-* En el **PowerPoint**, el email spoofing aparece como **H-02** y Sentry como **H-03**.
-* En el **informe**, Sentry aparece como **H-02** y el email spoofing como **H-03**.
+| ID | Hallazgo | Severidad |
+|----|----------|-----------|
+| H-01 | Ausencia de cabeceras de seguridad HTTP | Crítica |
+| H-02 | Dominio vulnerable a email spoofing (SPF/DMARC) | Crítica |
+| H-03 | Credenciales de Sentry expuestas | Alta |
+| H-04 | Exposición de datos de usuario e IDs internos | Alta |
+| H-05 | robots=noindex inconsistente con producción | Media |
+| H-06 | Infraestructura Supabase expuesta (verificada como protegida) | Informativa |
+| H-07 | IDOR: productos accesibles sin login | Informativa |
+| H-08 / H-09 | Controles verificados OK (archivos y endpoints) | — |
 
-El guion sigue la numeración del PowerPoint para que coincida con lo que verá el tribunal. Lo recomendable es unificar ambos documentos antes de la defensa.
+Este guion sigue este mismo orden y numeración, de modo que lo que narras coincide con lo que muestra cada diapositiva del PowerPoint.
 
